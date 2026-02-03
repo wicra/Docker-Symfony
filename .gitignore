@@ -1,0 +1,39 @@
+# Docker volumes et données
+mysql_data/
+postgres_data/
+redis_data/
+
+# Logs Docker
+*.log
+logs/
+
+# Données de base de données
+data/
+db_data/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# IDE et éditeurs
+.vscode/
+.idea/
+
+# Certificats SSL (si ajoutés)
+*.pem
+*.key
+*.crt
+ssl/
+
+# Fichiers temporaires Docker
+.docker/
+temp/
+tmp/
+
+# Backups
+*.sql
+*.dump
+backup/
+
+# Cache Docker
+.dockerignore.bak
