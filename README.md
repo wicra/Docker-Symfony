@@ -69,6 +69,10 @@ docker exec -it app_phpmyadmin bash
 # Entrer dans le conteneur PHP
 docker exec -it app_php bash
 
+# Configurer Git (obligatoire avant de créer un projet)
+git config --global user.email "votre@gmail.com"
+git config --global user.name "Name"
+
 # Se placer dans le répertoire de travail
 cd /var/www
 
