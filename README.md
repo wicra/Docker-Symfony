@@ -8,22 +8,30 @@ Ce conteneur Docker permet de créer un **environnement de développement comple
 - **Composer** (gestionnaire de dépendances PHP)
 - **Symfony CLI** (outil officiel pour créer des projets)
 - **Git** (gestion de versions)
-- **Nginx** (serveur web optimisé pour Symfony)
 - **MySQL 8.0** (base de données)
 - **phpMyAdmin** (interface d'administration DB)
 
-## 🚀 **Démarrage rapide**
+*Le serveur web Symfony CLI est utilisé pour le développement.*
 
-Un fichier `start.sh` permet de lancer directement l'environnement :
+## 🚀 **Démarrage rapide**
 
 ```bash
 # Depuis le dossier racine du projet
 ./start.sh
 ```
 
+## 📁 **Structure des fichiers**
+
+```
+docker/
+├── Dockerfile           # PHP 8.2 + Composer + Symfony CLI + Git
+├── docker-compose.yml   # Services (PHP, MySQL, phpMyAdmin)
+└── README.md           # Cette documentation
+```
+
 ## ✅ **Vérification de l'installation**
 
-Une fois vos conteneurs démarrés, vous pouvez vérifier que tout fonctionne avec les commandes suivantes :
+Une fois vos conteneurs démarrés, vérifiez que tout fonctionne :
 
 ```bash
 # Vérifier PHP
@@ -42,81 +50,90 @@ docker exec -it app_php git --version
 docker ps
 ```
 
+## 🔧 **Accès aux conteneurs**
+
+```bash
+# Accéder au conteneur PHP (le plus utilisé)
+docker exec -it app_php bash
+
+# Accéder au conteneur MySQL
+docker exec -it app_mysql bash
+
+# Accéder au conteneur phpMyAdmin
+docker exec -it app_phpmyadmin bash
+```
+
 ## 📦 **Créer un projet Symfony**
 
-Pour créer un nouveau projet Symfony, utilisez la commande suivante :
-
 ```bash
+# Entrer dans le conteneur PHP
+docker exec -it app_php bash
+
+# Se placer dans le répertoire de travail
+cd /var/www
+
 # Créer un projet web complet
-docker exec -it app_php symfony new votre-nom-projet --webapp
+symfony new votre-nom-projet --webapp
 
 # Ou avec Composer (alternative)
-docker exec -it app_php composer create-project symfony/webapp-pack votre-nom-projet
+composer create-project symfony/webapp-pack votre-nom-projet
 ```
 
-## 🔧 **Configuration pour votre projet**
-
-### **1. Modifier le fichier `.env`**
-
-Pour que votre conteneur démarre sur votre projet, modifiez le fichier `docker/.env` :
+## 🚀 **Démarrer le serveur Symfony**
 
 ```bash
-# Spécifiez le nom de votre projet
-PROJECT_NAME=votre-nom-projet
+# Entrer dans le conteneur PHP
+docker exec -it app_php bash
 
-# Configuration base de données
-DATABASE_URL="mysql://user:password@mysql:3306/app_db"
+# Aller dans votre projet
+cd votre-nom-projet
+
+# Démarrer le serveur (accessible depuis l'hôte)
+symfony serve --allow-all-ip --port=8000
 ```
-
-### **2. Redémarrer les conteneurs**
-
-Après avoir modifié `.env`, redémarrez pour appliquer les changements :
-
-```bash
-cd docker
-docker compose down
-docker compose up -d
-```
-
-### **3. Accéder à votre application**
-
-Votre projet Symfony sera maintenant accessible sur :
-
-**http://localhost:8080**
 
 ## 🌐 **Tous les accès disponibles**
 
-- **Application Symfony** : http://localhost:8080
+- **Application Symfony** : http://localhost:8000
 - **phpMyAdmin** : http://localhost:8081  
 - **MySQL** : localhost:3306 (`user` / `password`)
 
 ## 🔧 **Commandes de développement courantes**
 
 ```bash
-# Accéder au conteneur PHP pour travailler
+# Accéder au conteneur pour travailler
 docker exec -it app_php bash
 
-# Console Symfony (depuis le conteneur ou en direct)
-docker exec -it app_php php ${PROJECT_NAME}/bin/console list
-docker exec -it app_php php ${PROJECT_NAME}/bin/console make:controller
+# Console Symfony (depuis le conteneur, dans votre projet)
+php bin/console list
+php bin/console make:controller
+php bin/console make:entity
+
+# Ou directement depuis l'hôte (remplacer 'mon-projet' par votre nom de projet)
+docker exec -it app_php php mon-projet/bin/console about
+docker exec -it app_php php mon-projet/bin/console debug:router
 
 # Gestion base de données
-docker exec -it app_php php ${PROJECT_NAME}/bin/console doctrine:database:create
-docker exec -it app_php php ${PROJECT_NAME}/bin/console make:migration
+docker exec -it app_php php mon-projet/bin/console doctrine:database:create
+docker exec -it app_php php mon-projet/bin/console make:migration
+docker exec -it app_php php mon-projet/bin/console doctrine:migrations:migrate
+```
 
-# Voir les logs en temps réel
+## 🔍 **Debugging et logs**
+
+```bash
+# Logs de tous les conteneurs
 docker compose logs -f
-```
 
-## � **Structure des fichiers**
+# Logs d'un conteneur spécifique
+docker logs -f app_php
+docker logs -f app_mysql
 
-```
-docker/
-├── Dockerfile           # Configuration PHP avec tous les outils
-├── docker-compose.yml   # Orchestration des services
-├── nginx.conf          # Serveur web optimisé pour Symfony
-├── .env                # Variables d'environnement (nom du projet)
-└── README.md           # Cette documentation
+# Logs Symfony (depuis le conteneur, dans votre projet)
+docker exec -it app_php tail -f mon-projet/var/log/dev.log
+
+# Vider le cache Symfony
+docker exec -it app_php php mon-projet/bin/console cache:clear
 ```
 
 ## 💡 **Workflow de développement**
@@ -124,13 +141,39 @@ docker/
 1. **Lancer l'environnement** : `./start.sh`
 2. **Vérifier les installations** : Commandes de vérification ci-dessus
 3. **Créer votre projet** : `symfony new mon-projet --webapp`
-4. **Configurer l'accès** : Modifier `docker/.env` avec le nom du projet
-5. **Redémarrer** : `docker compose down && docker compose up -d`
-6. **Développer** : Accéder à http://localhost:8080
+4. **Démarrer Symfony** : `symfony serve --allow-all-ip --port=8000`
+5. **Développer** : Accéder à http://localhost:8000
 
 ## ⚠️ **Notes importantes**
 
-- **Un seul projet actif** : Le système gère un projet Symfony à la fois
+- **Serveur Symfony CLI** : Utilisez `symfony serve --allow-all-ip --port=8000` dans le conteneur
 - **Modifications en temps réel** : Vos changements de code sont automatiquement visibles
-- **Pas besoin de `symfony server:start`** : Nginx gère déjà le serveur web
+- **Port 8000** : L'application sera accessible sur http://localhost:8000
 - **Base de données persistante** : Vos données MySQL sont sauvegardées entre redémarrages
+- **Plusieurs projets possibles** : Vous pouvez créer plusieurs projets dans `/var/www`
+
+## 🛠️ **Gestion des conteneurs**
+
+```bash
+# Démarrer les conteneurs
+cd docker && docker compose up -d
+
+# Arrêter les conteneurs
+cd docker && docker compose down
+
+# Reconstruire les conteneurs
+cd docker && docker compose up -d --build
+
+# Voir l'état des conteneurs
+docker ps
+
+# Nettoyer les conteneurs arrêtés
+docker container prune
+```
+
+## 📦 **Outils installés**
+
+- **PHP 8.2-FPM** avec extension MySQL
+- **Composer** (gestionnaire de dépendances)
+- **Symfony CLI** (outil officiel Symfony)
+- **Git** (pour les projets Symfony)

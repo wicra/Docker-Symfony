@@ -3,26 +3,10 @@ services:
   php:
     build: .
     container_name: app_php
-    volumes:
-      - ../:/var/www
-    environment:
-      - PROJECT_NAME=${PROJECT_NAME}
-    networks:
-      - app_network
-
-  # Serveur Nginx
-  nginx:
-    image: nginx:alpine
-    container_name: app_nginx
     ports:
-      - "8080:80"
+      - "8000:8000"
     volumes:
       - ../:/var/www
-      - ./nginx.conf:/etc/nginx/templates/default.conf.template
-    environment:
-      - PROJECT_NAME=${PROJECT_NAME}
-    depends_on:
-      - php
     networks:
       - app_network
 
