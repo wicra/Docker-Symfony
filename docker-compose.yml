@@ -1,0 +1,64 @@
+services:
+  # Serveur PHP
+  php:
+    build: .
+    container_name: app_php
+    volumes:
+      - ../:/var/www
+    environment:
+      - PROJECT_NAME=${PROJECT_NAME}
+    networks:
+      - app_network
+
+  # Serveur Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: app_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ../:/var/www
+      - ./nginx.conf:/etc/nginx/templates/default.conf.template
+    environment:
+      - PROJECT_NAME=${PROJECT_NAME}
+    depends_on:
+      - php
+    networks:
+      - app_network
+
+  # Base de données MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: app_mysql
+    environment:
+      MYSQL_DATABASE: app_db
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app_network
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: app_phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - app_network
+
+networks:
+  app_network:
+
+volumes:
+  mysql_data:
